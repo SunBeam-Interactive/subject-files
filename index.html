@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>SUNNY'S PLAYSTATION // CORE</title>
+    <style>
+        :root {
+            --bg: #050505; --txt: #d1d1d1; --acc: #7a8cff; --warn: #ff4d4d; --dim: #252525;
+        }
+        body { background: var(--bg); color: var(--txt); font-family: 'Courier New', monospace; display: flex; justify-content: center; line-height: 1.4; margin: 0; }
+        main { padding: 40px 20px; max-width: 850px; width: 100%; }
+        
+        /* Estilo Anexo */
+        .attachment { 
+            background: #0a0a0a; border: 1px solid #1a1a1a; border-left: 4px solid var(--acc); 
+            padding: 20px; margin: 20px 0; position: relative; box-shadow: 10px 10px 0px #000;
+        }
+        .attachment::after { content: "DECRYPTED_DATA"; position: absolute; top: -10px; right: 10px; background: var(--bg); color: var(--dim); font-size: 10px; padding: 0 5px; }
+
+        .line { margin-bottom: 8px; white-space: pre-wrap; }
+        .system { color: var(--acc); }
+        .warning { color: var(--warn); }
+        .dim { color: var(--dim); }
+        .secret-code { color: #3e4a89; font-weight: bold; } /* Códigos "invisíveis" */
+
+        /* Diretório */
+        #directory { border-bottom: 1px solid var(--dim); padding-bottom: 10px; margin-bottom: 20px; display: flex; gap: 15px; font-size: 12px; }
+        .file-status { cursor: pointer; text-decoration: none; color: var(--dim); }
+        .file-status.unlocked { color: var(--acc); text-decoration: underline; }
+        .file-status.locked::before { content: "🔒 "; }
+
+        /* Input Group */
+        .console-input { display: flex; background: #0c0c0c; border: 1px solid #1a1a1a; padding: 5px; margin-top: 20px; }
+        input { background: transparent; border: none; color: var(--acc); font-family: inherit; outline: none; flex-grow: 1; padding: 10px; }
+        button { background: #1a1a1a; border: 1px solid #333; color: #888; cursor: pointer; font-family: inherit; padding: 0 20px; }
+        button:hover { background: var(--acc); color: #000; }
+
+        #output { margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+<main>
+    <div id="header-terminal"></div>
+
+    <div id="directory">
+        <span class="dim">SISTEMA:</span>
+        <span id="file01" class="file-status locked">[ARQUIVO_01]</span>
+        <span id="file02" class="file-status locked">[ARQUIVO_02]</span>
+        <span id="file03" class="file-status locked">[ARQUIVO_03]</span>
+    </div>
+
+    <div class="console-input">
+        <input type="text" id="password" placeholder="INSERIR CREDENCIAL..." autocomplete="off">
+        <button onclick="handleInput()">ENTER</button>
+    </div>
+
+    <div id="output"></div>
+</main>
+
+<script>
+const passwordInput = document.getElementById("password");
+const out = document.getElementById("output");
+const headerTerm = document.getElementById("header-terminal");
+
+let isTyping = false;
+
+const lore = {
+    "continua": {
+        id: "file01",
+        title: "ARQUIVO_01 — REGISTRO DE TESTE",
+        status: "ENCERRAMENTO INCONCLUSIVO",
+        type: "system",
+        content: [
+            "A Sunny’s Playstation iniciou os primeiros testes com o Ser para mapear limites físicos básicos. Não havia função atribuída aos sujeitos além da coleta de dados.",
+            "Os testes focavam em variáveis isoladas: altura máxima suportável, velocidade antes da perda de controle, força sem colapso estrutural.",
+            "Animais foram utilizados na fase inicial. Resultados inconsistentes. Sujeitos humanos jovens apresentaram maior compatibilidade [ID: 0x415449564F].",
+            "Após a coleta, o encerramento padrão foi executado. O corpo respondeu conforme previsto. Entretanto, o estado interno do experimento permaneceu ativo.",
+            "O sistema manteve o registro aberto por falha de descarte. O teste não foi considerado finalizado. Observação: O processo continua mesmo após a interrupção física."
+        ]
+    },
+    "ativo": {
+        id: "file02",
+        title: "ARQUIVO_02 — REGISTRO FUNCIONAL",
+        status: "ATIVO SEM ATRIBUIÇÃO",
+        type: "system",
+        content: [
+            "Com a recorrência de falhas, novos experimentos foram ajustados para funções práticas. Esses sujeitos existiam para executar tarefas.",
+            "Testadas capacidades de: observação prolongada, resposta a comandos, auxílio laboratorial. Experimentos 0X apresentaram estabilidade superior.",
+            "Quando a função deixou de ser necessária, o encerramento foi solicitado. O desligamento físico ocorreu normalmente.",
+            "O sistema continuou registrando respostas residuais [REF: 0x49525245564552534956454C]. A consciência não foi detectada de forma convencional, mas o experimento reagia.",
+            "O estado foi mantido como ativo. Nota interna: A separação completa entre Ser e alma não foi alcançada."
+        ]
+    },
+    "irreversivel": {
+        id: "file03",
+        title: "ARQUIVO_03 — AVALIAÇÃO FINAL",
+        status: "IRREVERSÍVEL",
+        type: "warning",
+        content: [
+            "Determinado que certos experimentos não podem ser totalmente encerrados. O corpo pode ser interrompido, mas o estado persiste.",
+            "Sujeitos não atendem critérios de vida nem de descarte. Não foram classificados como falecidos.",
+            "A Sunny’s Playstation não possui meios para restaurar ou eliminar esses estados. O material restante foi mantido sob observação passiva.",
+            "Conclusão: O experimento cumpriu sua função. O que sobrou não está mais sob controle. Encerrar acesso."
+        ]
+    }
+};
+
+async function typeEffect(target, text, className = "", delay = 10) {
+    const div = document.createElement("div");
+    div.className = "line " + className;
+    target.appendChild(div);
+    for (let char of text) {
+        div.innerText += char;
+        await new Promise(r => setTimeout(r, delay));
+    }
+}
+
+async function bootSequence() {
+    await typeEffect(headerTerm, "SISTEMA DE ARQUIVOS SUNNY'S PLAYSTATION [V.4.0]", "system", 20);
+    // Fragmentos do Arquivo 01 aparecendo no boot
+    await typeEffect(headerTerm, ">> ERROR: Limites_físicos_básicos detectados no buffer.", "dim");
+    await typeEffect(headerTerm, ">> WARNING: Sujeitos_jovens_compatibilidade_alerta.", "dim");
+    await typeEffect(headerTerm, "Localizando God Core... O processo ainda se mantém em fluxo.", "dim");
+}
+
+async function showFile(key) {
+    if (isTyping) return;
+    isTyping = true;
+    out.innerHTML = "";
+    
+    const data = lore[key];
+    const el = document.getElementById(data.id);
+    el.classList.add("unlocked");
+    el.classList.remove("locked");
+    el.onclick = () => showFile(key);
+
+    const attach = document.createElement("div");
+    attach.className = "attachment";
+    out.appendChild(attach);
+
+    await typeEffect(attach, data.title, "system bold");
+    await typeEffect(attach, "STATUS: " + data.status, data.type);
+    
+    for (let p of data.content) {
+        await new Promise(r => setTimeout(r, 300));
+        // Adiciona códigos secretos em azul no meio do texto
+        let modText = p.replace(/\[ID: .*?\]|\[REF: .*?\]/g, (match) => `<span class="secret-code">${match}</span>`);
+        const pDiv = document.createElement("div");
+        pDiv.className = "line";
+        pDiv.innerHTML = "";
+        attach.appendChild(pDiv);
+        
+        // Efeito de digitação para texto com HTML
+        let tempText = p.replace(/\[ID: .*?\]|\[REF: .*?\]/g, "█".repeat(12));
+        for (let char of p) {
+            pDiv.innerText += char; // Simplificado para performance com o texto longo
+            await new Promise(r => setTimeout(r, 2));
+        }
+        pDiv.innerHTML = modText; // Aplica o destaque no final
+    }
+    isTyping = false;
+}
+
+function handleInput() {
+    const pass = passwordInput.value.toLowerCase().trim();
+    if (lore[pass]) {
+        showFile(pass);
+        passwordInput.value = "";
+    } else {
+        const err = document.createElement("div");
+        err.className = "line warning";
+        err.innerText = "!! ACESSO NEGADO !!";
+        out.prepend(err);
+        setTimeout(() => err.remove(), 2000);
+    }
+}
+
+passwordInput.addEventListener("keypress", e => { if (e.key === "Enter") handleInput(); });
+window.onload = bootSequence;
+</script>
+</body>
+</html>
